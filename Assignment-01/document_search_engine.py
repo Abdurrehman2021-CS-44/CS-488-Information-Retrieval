@@ -1,13 +1,12 @@
 import os
 from collections import defaultdict
-import re
 import nltk
 from nltk.corpus import stopwords
 
 stop_words = set(stopwords.words('english'))
 
 class DocumentSearchEngine:
-    def __init__(self, folder_path: str):
+    def __init__(self, folder_path):
         self.folder_path = folder_path
         self.title_index = defaultdict(list)    # Index for titles
         self.content_index = defaultdict(list)  # Index for content
@@ -26,16 +25,14 @@ class DocumentSearchEngine:
                     doc_id += 1
 
         print(f"{len(self.documents)} documents loaded successfully.")
-        print(f"Title: {self.title_index}")
-        print(f"Content: {self.content_index}")
     
-    def index_document(self, doc_id: int, title: str, content: str):
+    def index_document(self, doc_id, title, content):
         # Clean and tokenize title
-        title_words = re.findall(r'\w+', title.lower())
+        title_words = title.lower().split()
         filtered_title_words = [word for word in title_words if word not in stop_words]
         
         # Clean and tokenize content
-        content_words = re.findall(r'\w+', content.lower())
+        content_words = content.lower().split()
         filtered_content_words = [word for word in content_words if word not in stop_words]
         
         # Index title words
@@ -46,7 +43,25 @@ class DocumentSearchEngine:
         for word in filtered_content_words:
             self.content_index[word].append(doc_id)
 
+    def search(self, query, search_by):
+        query_words = query.lower().split()
+        query_words = [word for word in query_words if word not in stop_words]
+        
+        if not query_words:
+            return []
+
+        # Choose the correct index based on the search preference
+        index = self.title_index if search_by == "title" else self.content_index
+
+        # Find documents containing all query words
+        result_docs = set(index[query_words[0]])
+        for word in query_words[1:]:
+            result_docs &= set(index[word])
+        
+        return list(result_docs)
+
 if __name__ == "__main__":
     folder_path = 'documents'
     search_engine = DocumentSearchEngine(folder_path)
     search_engine.load_and_index_documents()
+    print(search_engine.search("artificial", "content"))
