@@ -59,9 +59,23 @@ class DocumentSearchEngine:
             result_docs &= set(index[word])
         
         return list(result_docs)
+    
+    def display_results(self, doc_ids, search_by):
+        if not doc_ids:
+            print("No matching documents found.")
+        else:
+            for doc_id in doc_ids:
+                title = self.documents[doc_id]["title"]
+                content_snippet = self.documents[doc_id]["content"][:200]  # Show first 200 chars of content
+                print(f"Document ID: {doc_id+1}")
+                print(f"Title: {title}")
+                if search_by == "content":
+                    print(f"Content: {content_snippet}...")
+                print()  # Blank line for readability
 
 if __name__ == "__main__":
     folder_path = 'documents'
     search_engine = DocumentSearchEngine(folder_path)
     search_engine.load_and_index_documents()
-    print(search_engine.search("artificial", "content"))
+    doc_ids = search_engine.search("artificial", "content")
+    search_engine.display_results(doc_ids, "content")
