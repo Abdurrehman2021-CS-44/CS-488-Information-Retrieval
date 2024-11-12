@@ -51,12 +51,20 @@ class DocumentSearchEngine:
         # Choose the correct index based on the search preference
         index = self.title_index if search_by == "title" else self.content_index
 
-        # Find documents containing all query words
-        result_docs = set(index[query_words[0]])
-        for word in query_words[1:]:
-            result_docs &= set(index[word])
+        # Dictionary to store document scores based on the frequency of query words
+        doc_scores = defaultdict(int)
+
+        # Calculate a simple score for each document based on query term frequency
+        for word in query_words:
+            if word in index:
+                for doc_id in index[word]:
+                    doc_scores[doc_id] += 1  # Increase score for each occurrence of the query word
+
+        # Sort documents by score in descending order (documents with higher scores appear first)
+        ranked_docs = sorted(doc_scores.items(), key=lambda item: item[1], reverse=True)
         
-        return list(result_docs)
+        # Extract only the document IDs in ranked order
+        return [doc_id for doc_id, score in ranked_docs]
     
     def display_results(self, doc_ids, search_by):
         if not doc_ids:
