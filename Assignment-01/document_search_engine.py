@@ -23,8 +23,6 @@ class DocumentSearchEngine:
                     self.documents[doc_id] = {"title": title, "content": content}
                     self.index_document(doc_id, title, content)
                     doc_id += 1
-
-        print(f"{len(self.documents)} documents loaded successfully.")
     
     def index_document(self, doc_id, title, content):
         # Clean and tokenize title
@@ -72,10 +70,37 @@ class DocumentSearchEngine:
                 if search_by == "content":
                     print(f"Content: {content_snippet}...")
                 print()  # Blank line for readability
+    
+    def test_search_engine(self, queries, search_by):
+        for query in queries:
+            print(f"Query: '{query}' (Search by: {search_by})")
+            result_docs = self.search(query, search_by)
+            self.display_results(result_docs, search_by)
 
 if __name__ == "__main__":
+    # Folder path for documents
     folder_path = 'documents'
+    
+    # Initialize the search engine
     search_engine = DocumentSearchEngine(folder_path)
+    
+    # Load and index documents
     search_engine.load_and_index_documents()
-    doc_ids = search_engine.search("artificial", "content")
-    search_engine.display_results(doc_ids, "content")
+    
+    # Simple command-line interface
+    print("Welcome to the Simple Document Search Engine!")
+    
+    # Ask the user for search preference: by title or by content
+    while True:
+        search_by = input("\nWould you like to search by 'title' or 'content'? (type 'exit' to quit): ").strip().lower()
+        if search_by == 'exit':
+            print("Exiting search engine. Goodbye!")
+            break
+        elif search_by not in {'title', 'content'}:
+            print("Invalid option. Please enter 'title' or 'content'.")
+            continue
+
+        # Perform the search based on the user's preference
+        query = input("Enter search query: ").strip()
+        result_docs = search_engine.search(query, search_by)
+        search_engine.display_results(result_docs, search_by)
