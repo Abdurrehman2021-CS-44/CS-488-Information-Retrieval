@@ -8,19 +8,49 @@ import os
 import time
 import nltk
 from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 from simple_dictionary import SimpleDictionary
 
 # Load English stopwords to filter out common words like "the", "and", etc.
 stop_words = set(stopwords.words('english'))
 
+# Initialize lemmatizer
+lemmatizer = WordNetLemmatizer()
+
 class DocumentSearchEngine:
     def __init__(self, folder_path):
+        """
+        Initialize the DocumentSearchEngine class.
+        - folder_path: Path to the folder containing documents to index.
+        """
         self.folder_path = folder_path
-        self.title_index = SimpleDictionary()  # Use SimpleDictionary for title index
-        self.content_index = SimpleDictionary()  # Use SimpleDictionary for content index
+        self.title_index = SimpleDictionary()
+        self.content_index = SimpleDictionary()
         self.documents = {}
-    
+
+    def extract_nouns(self, text):
+        """
+        Extract nouns from the given text using heuristic rules.
+        Lemmatize the words before indexing.
+        """
+        words = text.split()  
+        noun_suffixes = (
+            "ion", "ment", "ness", "ity", "ty", "ance", "ence", "ure", "ship", "hood", 
+            "er", "or", "ist", "al", "age", "cy", "dom"
+        )
+        nouns = []
+        
+        for word in words:
+            word = lemmatizer.lemmatize(word.lower())
+            if word[0].isupper() or word.endswith(noun_suffixes):
+                nouns.append(word)
+        
+        return nouns
+
     def load_and_index_documents(self):
+        """
+        Load and index documents from the specified folder.
+        """
         print("Loading and indexing documents...")
         doc_id = 0
         for filename in os.listdir(self.folder_path):
@@ -33,25 +63,26 @@ class DocumentSearchEngine:
                     self.index_document(doc_id, title, content)
                     doc_id += 1
         print(f"Loaded and indexed {doc_id} documents.")
-    
+
     def index_document(self, doc_id, title, content):
-        title_words = title.lower().split()
-        filtered_title_words = [word for word in title_words if word not in stop_words]
+        """
+        Index a single document by extracting and indexing nouns from its title and content.
+        """
+        title_nouns = self.extract_nouns(title)
+        content_nouns = self.extract_nouns(content)
         
-        content_words = content.lower().split()
-        filtered_content_words = [word for word in content_words if word not in stop_words]
+        for noun in title_nouns:
+            self.title_index.add(noun, doc_id)
         
-        # Index title words
-        for word in filtered_title_words:
-            self.title_index.add(word, doc_id)
-        
-        # Index content words
-        for word in filtered_content_words:
-            self.content_index.add(word, doc_id)
+        for noun in content_nouns:
+            self.content_index.add(noun, doc_id)
 
     def search(self, query, search_by):
+        """
+        Search the indexed documents for the query terms and rank results based on frequency.
+        """
         query_words = query.lower().split()
-        query_words = [word for word in query_words if word not in stop_words]
+        query_words = [lemmatizer.lemmatize(word) for word in query_words if word not in stop_words]
         
         if not query_words:
             return []
@@ -64,13 +95,16 @@ class DocumentSearchEngine:
             for doc_id in doc_ids:
                 if doc_id not in doc_scores:
                     doc_scores[doc_id] = 0
-                doc_scores[doc_id] += 1  # Increment score based on frequency
+                doc_scores[doc_id] += 1
 
         ranked_docs = sorted(doc_scores.items(), key=lambda item: item[1], reverse=True)
         
         return [doc_id for doc_id, score in ranked_docs]
-    
+
     def display_results(self, doc_ids, search_by, query_time):
+        """
+        Display the search results to the user.
+        """
         print("\n" + "="*50)
         print(f"Search Results for '{search_by}' query in {query_time:.2f} seconds")
         print("="*50)
@@ -89,8 +123,11 @@ class DocumentSearchEngine:
                     print(f"Content Preview: {content_snippet}...")
                 print("-" * 50)
             print(f"\nTotal Results Found: {len(doc_ids)}")
-    
+
     def test_search_engine(self, queries, search_by):
+        """
+        Test the search engine with a list of queries.
+        """
         for query in queries:
             print(f"Query: '{query}' (Search by: {search_by})")
             start_time = time.time()
@@ -99,19 +136,15 @@ class DocumentSearchEngine:
             self.display_results(result_docs, search_by, query_time)
 
 if __name__ == "__main__":
-    # Folder path for documents
+    # Folder path for documents (change this to the correct path on your system)
     folder_path = 'documents'
     
     # Initialize the search engine
     search_engine = DocumentSearchEngine(folder_path)
     
-    # Load and index documents
+    # Load and index documents from the folder
     search_engine.load_and_index_documents()
 
-    # Test the document
-    # search_engine.test_search_engine(['intelligence', 'learning'], 'content')
-    # input()
-    
     # Command-line interface
     print("\nWelcome to the Simple Document Search Engine!\n")
     
