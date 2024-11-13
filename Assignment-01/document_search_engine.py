@@ -1,4 +1,5 @@
 import os
+import time
 from collections import defaultdict
 import nltk
 from nltk.corpus import stopwords
@@ -13,6 +14,7 @@ class DocumentSearchEngine:
         self.documents = {}  # Document ID to title and content mapping
     
     def load_and_index_documents(self):
+        print("Loading and indexing documents...")
         doc_id = 0
         for filename in os.listdir(self.folder_path):
             file_path = os.path.join(self.folder_path, filename)
@@ -23,6 +25,7 @@ class DocumentSearchEngine:
                     self.documents[doc_id] = {"title": title, "content": content}
                     self.index_document(doc_id, title, content)
                     doc_id += 1
+        print(f"Loaded and indexed {doc_id} documents.")
     
     def index_document(self, doc_id, title, content):
         # Clean and tokenize title
@@ -42,6 +45,7 @@ class DocumentSearchEngine:
             self.content_index[word].append(doc_id)
 
     def search(self, query, search_by):
+        # Clean and tokenize query
         query_words = query.lower().split()
         query_words = [word for word in query_words if word not in stop_words]
         
@@ -66,24 +70,33 @@ class DocumentSearchEngine:
         # Extract only the document IDs in ranked order
         return [doc_id for doc_id, score in ranked_docs]
     
-    def display_results(self, doc_ids, search_by):
+    def display_results(self, doc_ids, search_by, query_time):
+        print("\n" + "="*50)
+        print(f"Search Results for '{search_by}' query in {query_time:.2f} seconds")
+        print("="*50)
+        
         if not doc_ids:
             print("No matching documents found.")
         else:
-            for doc_id in doc_ids:
+            for i, doc_id in enumerate(doc_ids, start=1):
                 title = self.documents[doc_id]["title"]
                 content_snippet = self.documents[doc_id]["content"][:200]  # Show first 200 chars of content
+                print(f"\nResult {i}:")
+                print("-" * 50)
                 print(f"Document ID: {doc_id+1}")
                 print(f"Title: {title}")
                 if search_by == "content":
-                    print(f"Content: {content_snippet}...")
-                print()  # Blank line for readability
+                    print(f"Content Preview: {content_snippet}...")
+                print("-" * 50)
+            print(f"\nTotal Results Found: {len(doc_ids)}")
     
     def test_search_engine(self, queries, search_by):
         for query in queries:
             print(f"Query: '{query}' (Search by: {search_by})")
+            start_time = time.time()
             result_docs = self.search(query, search_by)
-            self.display_results(result_docs, search_by)
+            query_time = time.time() - start_time
+            self.display_results(result_docs, search_by, query_time)
 
 if __name__ == "__main__":
     # Folder path for documents
@@ -96,19 +109,30 @@ if __name__ == "__main__":
     search_engine.load_and_index_documents()
     
     # Simple command-line interface
-    print("Welcome to the Simple Document Search Engine!")
+    print("\nWelcome to the Simple Document Search Engine!\n")
     
     # Ask the user for search preference: by title or by content
     while True:
-        search_by = input("\nWould you like to search by 'title' or 'content'? (type 'exit' to quit): ").strip().lower()
-        if search_by == 'exit':
-            print("Exiting search engine. Goodbye!")
+        print("\nOptions:\n1. Search by Title\n2. Search by Content\n3. Exit")
+        choice = input("Select an option (1, 2, or 3): ").strip()
+        
+        if choice == '3':
+            print("\nExiting search engine. Goodbye!")
             break
-        elif search_by not in {'title', 'content'}:
-            print("Invalid option. Please enter 'title' or 'content'.")
+        elif choice == '1':
+            search_by = 'title'
+        elif choice == '2':
+            search_by = 'content'
+        else:
+            print("Invalid option. Please select 1, 2, or 3.")
             continue
 
         # Perform the search based on the user's preference
-        query = input("Enter search query: ").strip()
-        result_docs = search_engine.search(query, search_by)
-        search_engine.display_results(result_docs, search_by)
+        query = input("\nEnter search query: ").strip()
+        if query:
+            start_time = time.time()
+            result_docs = search_engine.search(query, search_by)
+            query_time = time.time() - start_time
+            search_engine.display_results(result_docs, search_by, query_time)
+        else:
+            print("Please enter a non-empty query.")
