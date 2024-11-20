@@ -121,6 +121,22 @@ class DocumentSearchEngine:
 
         # Sort results by score in descending order
         return sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)
+    
+    def search_with_tf_idf(self, query):
+        """
+        Perform a search using TF-IDF scoring.
+        """
+        query_terms = self.preprocess(query)
+        doc_scores = {}
+
+        for term in query_terms:
+            for doc_id in range(len(self.tf_idf_scores.buckets)):
+                doc_scores_data = self.tf_idf_scores.get(doc_id)
+                if doc_scores_data and term in doc_scores_data[0]:
+                    doc_scores[doc_id] = doc_scores.get(doc_id, 0) + doc_scores_data[0][term]
+
+        # Sort results by score in descending order
+        return sorted(doc_scores.items(), key=lambda x: x[1], reverse=True)
 
     def display_results(self, ranked_docs, query_time):
         """
@@ -148,17 +164,20 @@ def run_ui(search_engine):
     print("\nWelcome to the Document Search Engine!\n")
 
     while True:
-        print("\nOptions:\n1. Search by Term Frequency\n2. Exit")
-        choice = input("Select an option (1, or 2): ").strip()
+        print("\nOptions:\n1. Search by Term Frequency\n2. Search with TF-IDF\n3. Exit")
+        choice = input("Select an option (1, 2, or 3): ").strip()
 
-        if choice == '2':
+        if choice == '3':
             print("\nExiting the search engine. Goodbye!")
             break
-        elif choice in {'1'}:
+        elif choice in {'1', '2'}:
             query = input("\nEnter search query: ").strip()
             if query:
                 start_time = time.time()
-                results = search_engine.search(query)
+                if choice == '1':
+                    results = search_engine.search(query)
+                else:
+                    results = search_engine.search_with_tf_idf(query)
                 query_time = time.time() - start_time
                 search_engine.display_results(results, query_time)
             else:
