@@ -59,6 +59,54 @@ class DocumentSearchEngine:
                     self.inverted_index.add(term, doc_id)
         print("Inverted index built.")
 
+    def compute_tf_idf(self):
+        """
+        Compute the TF-IDF scores for terms across all documents.
+        """
+        doc_count = sum(len(bucket) for bucket in self.documents.buckets)
+        term_doc_frequency = {}
+
+        # Calculate term frequencies
+        for doc_id in range(len(self.documents.buckets)):
+            doc_data = self.documents.get(doc_id)
+            if doc_data:
+                doc = doc_data[0]
+                content = doc["title"] + " " + doc["content"]
+                terms = self.preprocess(content)
+                
+                # Count term frequencies
+                term_counts = {}
+                for term in terms:
+                    term_counts[term] = term_counts.get(term, 0) + 1
+                total_terms = len(terms)
+
+                # Calculate TF scores
+                doc_tf_scores = {}
+                for term, count in term_counts.items():
+                    tf = count / total_terms
+                    doc_tf_scores[term] = tf
+                    term_doc_frequency[term] = term_doc_frequency.get(term, 0) + 1
+
+                self.tf_idf_scores.add(doc_id, doc_tf_scores)
+
+        # Compute IDF and finalize TF-IDF
+        for term, df in term_doc_frequency.items():
+            # Custom log calculation to avoid math library
+            idf = 0
+            temp_doc_count = doc_count
+            while temp_doc_count > 1:
+                idf += 1
+                temp_doc_count //= (1 + df)
+            
+            # Update TF-IDF scores for documents containing the term
+            for doc_id in range(len(self.tf_idf_scores.buckets)):
+                doc_scores = self.tf_idf_scores.get(doc_id)
+                if doc_scores and term in doc_scores[0]:
+                    doc_scores[0][term] *= idf
+                    self.tf_idf_scores.add(doc_id, doc_scores[0])
+
+        print("TF-IDF scores computed.")
+
     def search(self, query):
         """
         Perform a search using the inverted index and rank results by term frequency.
@@ -122,9 +170,10 @@ if __name__ == "__main__":
     folder_path = "documents"  # Update with the correct path
     search_engine = DocumentSearchEngine(folder_path)
 
-    # Load and index documents
+    # Load, index, and compute TF-TDF of documents
     search_engine.load_documents()
     search_engine.build_inverted_index()
+    search_engine.compute_tf_idf()
 
     # Start the user interface
     run_ui(search_engine)
