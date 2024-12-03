@@ -1,0 +1,17 @@
+{
+    "title": "The Rise of SpaceX",
+    "sections": [
+        {
+            "heading": "Commercial Spaceflight",
+            "content": "SpaceX's Falcon and Starship rockets have revolutionized space travel."
+        },
+        {
+            "heading": "Reusability",
+            "content": "Reusable rockets significantly reduce the cost of space missions."
+        },
+        {
+            "heading": "Future Plans",
+            "content": "SpaceX plans to establish a human colony on Mars."
+        }
+    ]
+}  

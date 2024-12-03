@@ -1,0 +1,17 @@
+{
+    "title": "Exploration of Mars",
+    "sections": [
+        {
+            "heading": "Mars Rovers",
+            "content": "Curiosity and Perseverance rovers have provided valuable data about the Martian surface."
+        },
+        {
+            "heading": "Human Missions",
+            "content": "Plans for human exploration of Mars include life support systems and habitat construction."
+        },
+        {
+            "heading": "Scientific Discoveries",
+            "content": "Evidence of water and potential microbial life has been found on Mars."
+        }
+    ]
+}  

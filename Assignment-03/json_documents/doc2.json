@@ -1,0 +1,17 @@
+{
+    "title": "NASA Achievements",
+    "sections": [
+        {
+            "heading": "Early Missions",
+            "content": "NASA's Apollo program landed humans on the Moon in 1969."
+        },
+        {
+            "heading": "Technological Innovations",
+            "content": "NASA developed satellite systems for communication and GPS technology."
+        },
+        {
+            "heading": "Current Goals",
+            "content": "NASA aims to return humans to the Moon and explore Mars in the Artemis program."
+        }
+    ]
+}  
