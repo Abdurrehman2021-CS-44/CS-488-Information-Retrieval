@@ -3,10 +3,6 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
-# NLTK setup
-nltk.download('stopwords')
-nltk.download('wordnet')
-
 stop_words = set(stopwords.words('english'))
 lemmatizer = WordNetLemmatizer()
 
@@ -47,14 +43,17 @@ def query_vector(query, vocabulary):
     query_terms = preprocess(query)
     return [1 if term in query_terms else 0 for term in vocabulary]
 
-# Compute similarity score (Jaccard coefficient)
+# Compute similarity score (Dice coefficient)
 def compute_similarity(doc_vector, query_vector):
     """
-    Compute similarity using Jaccard coefficient.
+    Compute similarity using Dice coefficient.
     """
     intersection = sum(1 for d, q in zip(doc_vector, query_vector) if d == q == 1)
-    union = sum(1 for d, q in zip(doc_vector, query_vector) if d == 1 or q == 1)
-    return intersection / union if union > 0 else 0
+    doc_sum = sum(doc_vector)
+    query_sum = sum(query_vector)
+    dice_score = (2 * intersection) / (doc_sum + query_sum) if (doc_sum + query_sum) > 0 else 0
+    print(f"Intersection: {intersection}, Document sum: {doc_sum}, Query sum: {query_sum}, Dice score: {dice_score}")  # Debug
+    return dice_score
 
 # Rank documents based on similarity scores
 def rank_documents(term_document_matrix, query_vec):
@@ -79,20 +78,19 @@ def load_documents(folder_path):
     return documents
 
 # Main BIM retrieval function
-def bim_retrieval(documents, query, top_k=5):
+def bim_retrieval(documents, query):
     """
     Perform Binary Independence Model (BIM) retrieval.
     """
     term_document_matrix, vocabulary = create_term_document_matrix(documents)
     query_vec = query_vector(query, vocabulary)
     ranked_docs = rank_documents(term_document_matrix, query_vec)
-    top_documents = ranked_docs[:top_k]
-    return [(documents[idx], score) for idx, score in top_documents]
+    return [(documents[idx], score) for idx, score in ranked_docs]
 
 # CLI Interface
 def main():
     # Automatically load documents
-    folder_path = "path/to/documents"  # Set the folder path here
+    folder_path = "documents/"  # Set the folder path here
     documents = load_documents(folder_path)
 
     while True:
@@ -105,8 +103,8 @@ def main():
         if choice == "1":
             # Perform search query
             query = input("Enter your search query: ").strip()
-            top_k = int(input("Enter the number of top results to display (default 5): ").strip() or 5)
-            results = bim_retrieval(documents, query, top_k)
+            # top_k = int(input("Enter the number of top results to display (default 5): ").strip() or 5)
+            results = bim_retrieval(documents, query)
             print("\nTop results:")
             for rank, (doc, score) in enumerate(results, start=1):
                 print(f"{rank}. Score: {score:.3f} - Document: {doc}")

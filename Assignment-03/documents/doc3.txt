@@ -1,0 +1,1 @@
+Deep learning is part of machine learning that uses neural networks. It is inspired by the human brain and is applied in image recognition, natural language processing, and more.
